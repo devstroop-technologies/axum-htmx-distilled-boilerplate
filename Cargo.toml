@@ -1,0 +1,72 @@
+[package]
+name = "axum-htmx-app"
+version = "0.1.0"
+edition = "2021"
+description = "Axum + HTMX full-stack boilerplate with SPA-like capabilities"
+license = "MIT"
+
+[lib]
+name = "app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "app"
+path = "src/bin/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Web framework
+axum = { version = "0.7", features = ["multipart", "tokio"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace", "fs"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+
+# Templating: askama (compiled, release) + minijinja (hot-reload, dev)
+askama = "0.12"
+askama_axum = "0.4"
+minijinja = { version = "2.0", features = ["loader"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Utilities
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+html-escape = "0.2"
+
+# OpenAPI docs
+utoipa = { version = "4.0", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "7.0", features = ["axum"] }
+
+# Optional: Database (enable with --features database)
+sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"], optional = true }
+
+[features]
+default = []
+database = ["sqlx"]
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

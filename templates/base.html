@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <title>{% block title %}Axum HTMX App{% endblock %}</title>
+
+    <!-- Design System Tokens -->
+    {% include "components/_tokens.html" %}
+
+    <!-- Minimal CSS (~5KB vs Bootstrap's 25KB) -->
+    <link href="/static/css/app.css" rel="stylesheet">
+    <!-- Icons (optional, tree-shakeable in prod) -->
+    <link href="/static/css/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+
+        .app-wrapper { display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px; min-width: 250px; height: 100vh;
+            display: flex; flex-direction: column;
+            background: var(--color-background);
+            border-right: 1px solid var(--color-border);
+            transition: width 0.3s, min-width 0.3s;
+        }
+        .sidebar.collapsed { width: 64px; min-width: 64px; }
+        .sidebar-header {
+            padding: var(--space-4); border-bottom: 1px solid var(--color-border);
+            display: flex; align-items: center; gap: var(--space-3);
+        }
+        .sidebar-brand {
+            display: flex; align-items: center; gap: var(--space-3);
+            text-decoration: none; color: inherit; font-weight: 700; font-size: var(--font-size-lg);
+        }
+        .sidebar-brand i { font-size: 1.5rem; color: var(--color-brand); line-height: 1; }
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: var(--space-2); }
+        .sidebar .nav-link {
+            display: flex; align-items: center; gap: var(--space-3);
+            padding: var(--space-3) var(--space-4); margin-bottom: var(--space-1);
+            border-radius: var(--radius-md); color: var(--color-foreground-muted);
+            text-decoration: none; font-weight: 500;
+            transition: all var(--duration-fast);
+        }
+        .sidebar .nav-link:hover { background: var(--color-background-muted); color: var(--color-foreground); }
+        .sidebar .nav-link.active { background: var(--color-brand); color: white; }
+        .sidebar .nav-link i { width: 1.25rem; text-align: center; flex-shrink: 0; font-size: 1rem; line-height: 1; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .sidebar.collapsed .nav-link { justify-content: center; padding: var(--space-3); }
+        .sidebar.collapsed .brand-text { display: none; }
+
+        /* Main content */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .main-header {
+            height: 56px; min-height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 var(--space-4);
+            background: var(--color-background);
+            border-bottom: 1px solid var(--color-border);
+        }
+        .main-content { flex: 1; overflow-y: auto; padding: var(--space-6); background: var(--color-background-subtle); }
+
+        /* Stat cards */
+        .stat-card { padding: var(--space-4); }
+
+        /* HTMX loading indicator */
+        .htmx-indicator { opacity: 0; transition: opacity 0.2s; }
+        .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+
+        /* Skeleton loading */
+        .skeleton { background: var(--color-background-muted); border-radius: var(--radius-sm); animation: pulse 2s infinite; }
+        .skeleton-text { height: 1rem; width: 60%; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+
+        /* Error toast area */
+        #error-toast:empty { display: none; }
+        #error-toast { position: fixed; top: var(--space-4); right: var(--space-4); z-index: 1000; max-width: 400px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { padding: var(--space-4); }
+        }
+    </style>
+
+    <!-- HTMX only (~14KB gzipped, zero framework overhead) -->
+    <script src="/static/js/htmx.min.js"></script>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Error toast container (HTMX errors swap here) -->
+    <div id="error-toast"></div>
+
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <i class="bi bi-box-fill"></i>
+                    <span class="brand-text">HTMX App</span>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-link {% if current_page == 'home' %}active{% endif %}">
+                    <i class="bi bi-house"></i><span class="nav-text">Home</span>
+                </a>
+                <a href="/demo" class="nav-link {% if current_page == 'demo' %}active{% endif %}">
+                    <i class="bi bi-lightning"></i><span class="nav-text">Demo</span>
+                </a>
+                <a href="/about" class="nav-link {% if current_page == 'about' %}active{% endif %}">
+                    <i class="bi bi-info-circle"></i><span class="nav-text">About</span>
+                </a>
+                <a href="/api-docs/" target="_blank" class="nav-link">
+                    <i class="bi bi-book"></i><span class="nav-text">API Docs</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <div class="main-wrapper">
+            <header class="main-header">
+                <div style="display:flex;align-items:center;gap:var(--space-2)">
+                    <button class="btn btn-light btn-sm" onclick="toggleSidebar()" style="width:36px;height:36px;">
+                        <i class="bi bi-list"></i>
+                    </button>
+                </div>
+                <div>
+                    <button class="btn btn-light btn-sm" onclick="toggleTheme()" title="Toggle theme" style="width:36px;height:36px;">
+                        <i class="bi bi-sun-fill" id="theme-icon-light"></i>
+                        <i class="bi bi-moon-fill" id="theme-icon-dark"></i>
+                    </button>
+                    <script>
+                        // Immediately set correct icon (prevents flash of both icons)
+                        (function(){
+                            var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+                            document.getElementById('theme-icon-light').style.display = t === 'light' ? 'inline-block' : 'none';
+                            document.getElementById('theme-icon-dark').style.display = t === 'dark' ? 'inline-block' : 'none';
+                        })();
+                    </script>
+                </div>
+            </header>
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar toggle (replaces Alpine.js state management)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        // Theme toggle (vanilla JS, no framework needed)
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcons(next);
+        }
+
+        function updateThemeIcons(theme) {
+            document.getElementById('theme-icon-light').style.display = theme === 'light' ? 'inline-block' : 'none';
+            document.getElementById('theme-icon-dark').style.display = theme === 'dark' ? 'inline-block' : 'none';
+        }
+
+        // Initialize theme on load
+        (function() {
+            const saved = localStorage.getItem('theme') ||
+                (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcons(saved);
+
+            // Auto-dismiss error toasts after 5s
+            document.body.addEventListener('htmx:afterSwap', function(e) {
+                if (e.detail.target.id === 'error-toast') {
+                    setTimeout(() => e.detail.target.innerHTML = '', 5000);
+                }
+            });
+        })();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Home - Axum HTMX App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="text-2xl">Dashboard</h1>
+        <p class="text-sm text-muted">Server status and quick actions</p>
+    </div>
+
+    <!-- Status card loaded via HTMX -->
+    <div id="status-card"
+         hx-get="/partials/status-card"
+         hx-trigger="load, every 10s"
+         hx-swap="innerHTML">
+        <!-- Skeleton loading state -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><div class="card stat-card"><div class="skeleton skeleton-text"></div></div></div>
+            <div class="col-md-4"><div class="card stat-card"><div class="skeleton skeleton-text"></div></div></div>
+            <div class="col-md-4"><div class="card stat-card"><div class="skeleton skeleton-text"></div></div></div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-lightning text-warning"></i> HTMX Demo</h5>
+                <p class="text-sm text-muted">See HTMX partials, forms, and dynamic updates in action</p>
+                <a href="/demo" class="btn btn-primary btn-sm">Open Demo</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-book text-info"></i> API Documentation</h5>
+                <p class="text-sm text-muted">Interactive Swagger UI for the REST API</p>
+                <a href="/api-docs/" target="_blank" class="btn btn-outline-secondary btn-sm">Open Swagger</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

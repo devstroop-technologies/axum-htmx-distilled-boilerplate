@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Demo - Axum HTMX App{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <h1 class="text-2xl">HTMX Demo</h1>
+        <p class="text-sm text-muted">Interactive examples of HTMX-powered partials</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. Click to load -->
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-cursor-fill text-primary"></i> Click to Load</h5>
+                <p class="text-sm text-muted">Clicking the button fetches an HTML fragment from the server.</p>
+                <button class="btn btn-primary btn-sm mb-3"
+                        hx-get="/partials/item-list"
+                        hx-target="#item-list-target"
+                        hx-swap="innerHTML">
+                    Load Items
+                </button>
+                <div id="item-list-target">
+                    <p class="text-sm text-muted"><em>Click the button above&hellip;</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Form submission -->
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-input-cursor-text text-success"></i> Form → Partial</h5>
+                <p class="text-sm text-muted">Type a name and submit — the greeting is an HTMX-fetched fragment.</p>
+                <form hx-get="/partials/greeting" hx-target="#greeting-target" hx-swap="innerHTML" class="mb-3">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="name" class="form-control" placeholder="Your name">
+                        <button class="btn btn-success" type="submit">Greet</button>
+                    </div>
+                </form>
+                <div id="greeting-target"></div>
+            </div>
+        </div>
+
+        <!-- 3. Polling -->
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-arrow-repeat text-info"></i> Live Polling</h5>
+                <p class="text-sm text-muted">This card auto-refreshes every 5 seconds via <code>hx-trigger="every 5s"</code>.</p>
+                <div hx-get="/partials/status-card"
+                     hx-trigger="every 5s"
+                     hx-swap="innerHTML"
+                     id="poll-demo">
+                    <div class="row g-3">
+                        <div class="col-md-4"><div class="skeleton" style="height:60px;border-radius:var(--radius-md);"></div></div>
+                        <div class="col-md-4"><div class="skeleton" style="height:60px;border-radius:var(--radius-md);"></div></div>
+                        <div class="col-md-4"><div class="skeleton" style="height:60px;border-radius:var(--radius-md);"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Vanilla JS Counter (no framework needed) -->
+        <div class="col-md-6">
+            <div class="card">
+                <h5><i class="bi bi-lightning-charge-fill text-warning"></i> Vanilla JS Counter</h5>
+                <p class="text-sm text-muted">Client-side reactivity with plain JavaScript — zero dependencies.</p>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="updateCounter(-1)" style="width:36px;height:36px;">−</button>
+                    <span class="text-2xl" id="counter-value">0</span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="updateCounter(1)" style="width:36px;height:36px;">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let count = 0;
+    function updateCounter(delta) {
+        count += delta;
+        document.getElementById('counter-value').textContent = count;
+    }
+</script>
+{% endblock %}

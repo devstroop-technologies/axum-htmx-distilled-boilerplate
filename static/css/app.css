@@ -1,0 +1,226 @@
+/*
+ * Minimal CSS Framework (~5KB vs Bootstrap's ~25KB minified)
+ * Replaces Bootstrap with essential utilities only
+ */
+
+/* ============================================================
+   CSS Reset (minimal)
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font-family); color: var(--color-foreground); background: var(--color-background-subtle); }
+img, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; }
+a { color: var(--color-brand); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ============================================================
+   Layout Utilities
+   ============================================================ */
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 var(--space-4); }
+.container-fluid { width: 100%; padding: 0 var(--space-4); }
+
+/* Flexbox */
+.d-flex { display: flex; }
+.d-none { display: none; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.flex-column { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.justify-content-center { justify-content: center; }
+.justify-content-between { justify-content: space-between; }
+.align-items-center { align-items: center; }
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+
+/* Grid */
+.row { display: flex; flex-wrap: wrap; margin: 0 calc(var(--space-3) * -1); }
+.row > * { padding: 0 var(--space-3); }
+.col { flex: 1 0 0%; }
+.col-auto { flex: 0 0 auto; width: auto; }
+.col-6 { flex: 0 0 50%; max-width: 50%; }
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+@media (min-width: 768px) {
+  .col-md-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+  .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+  .col-md-8 { flex: 0 0 66.666%; max-width: 66.666%; }
+}
+.g-3 { --bs-gutter-x: var(--space-3); --bs-gutter-y: var(--space-3); }
+.g-3 > * { padding: calc(var(--space-3) / 2); }
+.g-4 { --bs-gutter-x: var(--space-4); --bs-gutter-y: var(--space-4); }
+.g-4 > * { padding: calc(var(--space-4) / 2); }
+
+/* ============================================================
+   Spacing Utilities
+   ============================================================ */
+.m-0 { margin: 0; }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.me-1 { margin-right: var(--space-1); }
+.me-2 { margin-right: var(--space-2); }
+.ms-1 { margin-left: var(--space-1); }
+.ms-2 { margin-left: var(--space-2); }
+.p-0 { padding: 0; }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
+
+/* ============================================================
+   Typography
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.25; margin-bottom: var(--space-2); }
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+h4, h5, h6 { font-size: var(--font-size-base); }
+p { margin-bottom: var(--space-3); }
+.text-center { text-align: center; }
+.text-end { text-align: right; }
+.fw-bold { font-weight: 700; }
+.fw-normal { font-weight: 400; }
+.text-primary { color: var(--color-brand); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }
+.text-info { color: var(--color-info); }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm); font-weight: 500;
+  border: 1px solid transparent; border-radius: var(--radius-md);
+  cursor: pointer; transition: all var(--duration-fast);
+  text-decoration: none;
+}
+.btn:hover { text-decoration: none; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-sm { padding: var(--space-1) var(--space-3); font-size: var(--font-size-xs); }
+.btn-lg { padding: var(--space-3) var(--space-6); font-size: var(--font-size-base); }
+
+.btn-primary { background: var(--color-brand); color: white; }
+.btn-primary:hover { background: var(--color-brand-hover); }
+.btn-secondary { background: var(--color-background-muted); color: var(--color-foreground); }
+.btn-secondary:hover { background: var(--color-border); }
+.btn-success { background: var(--color-success); color: white; }
+.btn-danger { background: var(--color-danger); color: white; }
+.btn-outline-primary { border-color: var(--color-brand); color: var(--color-brand); background: transparent; }
+.btn-outline-primary:hover { background: var(--color-brand); color: white; }
+.btn-outline-secondary { border-color: var(--color-border); color: var(--color-foreground-muted); background: transparent; }
+.btn-outline-secondary:hover { background: var(--color-background-muted); }
+.btn-light { background: var(--color-background); border-color: var(--color-border); color: var(--color-foreground); }
+.btn-light:hover { background: var(--color-background-muted); }
+
+/* ============================================================
+   Forms
+   ============================================================ */
+.form-control {
+  display: block; width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-background); color: var(--color-foreground);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.form-control:focus { outline: none; border-color: var(--color-brand); box-shadow: 0 0 0 3px var(--color-brand-muted); }
+.form-control::placeholder { color: var(--color-foreground-subtle); }
+
+.input-group { display: flex; }
+.input-group .form-control { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.input-group .btn { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.input-group-sm .form-control { padding: var(--space-1) var(--space-2); font-size: var(--font-size-xs); }
+
+.form-label { display: block; margin-bottom: var(--space-1); font-size: var(--font-size-sm); font-weight: 500; }
+.form-check { display: flex; align-items: center; gap: var(--space-2); }
+.form-check-input { width: 1rem; height: 1rem; accent-color: var(--color-brand); }
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+.card h5 { margin-bottom: var(--space-3); display: flex; align-items: center; gap: var(--space-2); }
+
+/* ============================================================
+   Alerts
+   ============================================================ */
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+.alert .alert-title { display: flex; align-items: center; gap: var(--space-2); }
+.alert .alert-title .bi { flex-shrink: 0; line-height: 1; vertical-align: middle; }
+.alert .alert-body { display: block; }
+.alert-success { background: rgba(34, 197, 94, 0.1); color: var(--color-success); border: 1px solid rgba(34, 197, 94, 0.2); }
+.alert-warning { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+.alert-danger { background: rgba(239, 68, 68, 0.1); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+.alert-info { background: rgba(59, 130, 246, 0.1); color: var(--color-info); border: 1px solid rgba(59, 130, 246, 0.2); }
+
+/* ============================================================
+   Lists
+   ============================================================ */
+.list-group { display: flex; flex-direction: column; }
+.list-group-item {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  margin-top: -1px;
+}
+.list-group-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.list-group-item:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+/* ============================================================
+   Badges
+   ============================================================ */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs); font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+.badge-success { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
+.badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
+.badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
+
+/* ============================================================
+   Code
+   ============================================================ */
+code, pre { font-family: var(--font-family-mono); font-size: var(--font-size-sm); }
+code { background: var(--color-background-muted); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+pre { background: var(--color-background-muted); padding: var(--space-4); border-radius: var(--radius-md); overflow-x: auto; }
+
+/* ============================================================
+   Tables (minimal)
+   ============================================================ */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--color-border); }
+th { font-weight: 600; background: var(--color-background-muted); }
+
+/* ============================================================
+   Icons (Bootstrap Icons utility classes)
+   ============================================================ */
+.bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; }

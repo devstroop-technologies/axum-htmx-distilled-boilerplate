@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}About - Axum HTMX App{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 48rem;">
+    <h1 class="text-2xl mb-4">About This Boilerplate</h1>
+
+    <div class="card mb-4">
+        <h5>Architecture</h5>
+        <p class="text-sm text-muted">A full-stack Rust web application with SPA-like capabilities, no JavaScript framework required.</p>
+        <ul class="text-sm" style="line-height: 2;">
+            <li><strong>Backend:</strong> Axum — async Rust web framework built on Tokio</li>
+            <li><strong>Frontend:</strong> Server-rendered HTML templates with HTMX for dynamic updates</li>
+            <li><strong>Templates (Dev):</strong> minijinja — hot-reloads from disk, edit and refresh</li>
+            <li><strong>Templates (Release):</strong> askama — compiled into the binary, zero overhead</li>
+            <li><strong>Styling:</strong> Custom CSS (~5KB) with CSS custom properties design system</li>
+            <li><strong>Reactivity:</strong> Vanilla JS — zero framework dependencies</li>
+            <li><strong>API:</strong> JSON REST endpoints with OpenAPI (Swagger UI)</li>
+        </ul>
+    </div>
+
+    <div class="card mb-4">
+        <h5>How HTMX SPA Works</h5>
+        <ol class="text-sm" style="line-height: 2;">
+            <li>Browser navigates to <code>/</code>, <code>/about</code>, etc. — server returns a <strong>full HTML page</strong></li>
+            <li>HTMX attributes like <code>hx-get="/partials/status-card"</code> fire requests that return <strong>HTML fragments</strong></li>
+            <li>HTMX swaps the fragment into the page — no full reload, feels like a SPA</li>
+            <li>Polling (<code>hx-trigger="every 10s"</code>) keeps data live without WebSockets</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h5>Project Structure</h5>
+        <pre class="text-sm font-mono" style="background:var(--color-background-muted);padding:var(--space-4);border-radius:var(--radius-md);overflow-x:auto;">
+src/
+  bin/main.rs          ← Entry point, router, middleware
+  lib.rs               ← Library root with macro exports
+  config.rs            ← TOML config loader
+  error.rs             ← Typed errors with HTMX-aware responses
+  render.rs            ← define_page! / define_partial! macros
+  handlers/
+    templates.rs       ← Full-page handlers (3 lines each!)
+    partials.rs        ← HTMX partial handlers
+    api/health.rs      ← JSON REST API handlers
+  services/
+    mod.rs             ← Service container
+    health.rs          ← Health service (trait + impl)
+    items.rs           ← Item service (in-memory, DB-ready)
+  middleware/mod.rs    ← Security headers, request logging
+  models/mod.rs        ← Shared state with services
+  utils/
+    logging.rs         ← Tracing setup
+    templates.rs       ← minijinja hot-reload helper
+templates/
+  base.html            ← Layout with sidebar, theme toggle
+  pages/*.html         ← Full page templates
+  partials/*.html      ← HTML fragment templates
+  components/*.html    ← Design tokens
+static/css/app.css     ← Minimal CSS framework (~5KB)
+config/app.toml        ← Application configuration</pre>
+    </div>
+</div>
+{% endblock %}
