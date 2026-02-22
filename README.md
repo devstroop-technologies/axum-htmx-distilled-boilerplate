@@ -1,112 +1,172 @@
 # Axum + HTMX Boilerplate
 
-Full-stack Rust web application with SPA-like capabilities — no JavaScript framework required.
+A full-stack Rust web application boilerplate that delivers SPA-like interactivity using server-rendered HTML — no JavaScript framework needed.
 
-## Architecture
+## Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Backend** | [Axum](https://github.com/tokio-rs/axum) | Async web framework on Tokio |
-| **Frontend** | [HTMX](https://htmx.org) | SPA-like navigation via HTML fragments |
-| **Reactivity** | Vanilla JS | Zero-dependency client-side interactivity |
-| **Styling** | Custom CSS (~5KB) | Minimal design system with dark mode |
-| **Templates (dev)** | [minijinja](https://github.com/mitsuhiko/minijinja) | Hot-reload from disk |
-| **Templates (release)** | [askama](https://github.com/djc/askama) | Compiled into binary, zero overhead |
-| **API docs** | [utoipa](https://github.com/juhaku/utoipa) + Swagger UI | OpenAPI spec + interactive docs |
-
-## Design Principles
-
-- **Minimal dependencies**: ~19KB JS (HTMX only) vs ~85KB (HTMX + Alpine + Bootstrap)
-- **DRY templates**: `define_page!` / `define_partial!` macros eliminate duplication
-- **Service layer**: Trait-based abstractions for testability
-- **HTMX-aware errors**: Auto-routed to toast notifications with proper HTTP codes
-
-## How It Works
-
-1. **Full pages** served on navigation (`GET /`, `/about`, `/demo`)
-2. **HTMX partials** fetched as HTML fragments (`GET /partials/status-card`)
-3. HTMX swaps fragments into the DOM — no full page reload
-4. **REST API** returns JSON (`GET /api/health`)
-5. Templates hot-reload in `cargo run` (debug), compiled in `cargo build --release`
+| Layer | Tech | Role |
+|---|---|---|
+| Runtime | [Tokio](https://tokio.rs) | Async runtime |
+| Framework | [Axum](https://github.com/tokio-rs/axum) 0.7 | HTTP routing, middleware, state |
+| Interactivity | [HTMX](https://htmx.org) | Swap HTML fragments without page reloads |
+| Templates (dev) | [MiniJinja](https://github.com/mitsuhiko/minijinja) | Hot-reload from disk |
+| Templates (release) | [Askama](https://github.com/djc/askama) | Compiled into the binary at build time |
+| Styling | Custom CSS (~5 KB) | Dark-mode-ready design system, no framework |
+| API Docs | [utoipa](https://github.com/juhaku/utoipa) + Swagger UI | Auto-generated OpenAPI spec |
+| Error Handling | [thiserror](https://github.com/dtolnay/thiserror) + [anyhow](https://github.com/dtolnay/anyhow) | Typed errors with HTMX-aware HTML responses |
 
 ## Quick Start
 
 ```bash
 cargo run
-# → http://localhost:3001
-# → http://localhost:3001/api-docs/  (Swagger UI)
 ```
 
-## Project Structure
+Open [http://localhost:3001](http://localhost:3001) for the app and [http://localhost:3001/api-docs/](http://localhost:3001/api-docs/) for Swagger UI.
+
+## How It Works
 
 ```
-src/
-  bin/main.rs            # Entry point — router, middleware, server
-  lib.rs                 # Library root with macro exports
-  config.rs              # TOML configuration loader
-  error.rs               # Error types with HTMX-aware HTML responses
-  render.rs              # define_page! / define_partial! macros
-  handlers/
-    templates.rs         # Full-page handlers (3 lines each!)
-    partials.rs          # HTMX partial handlers (HTML fragments)
-    api/health.rs        # JSON REST API endpoints
-  services/
-    mod.rs               # Service container
-    health.rs            # Health status service
-    items.rs             # Item CRUD service (in-memory / DB-ready)
-  middleware/mod.rs      # Security headers, request logging
-  models/mod.rs          # Shared application state
-  utils/
-    logging.rs           # Tracing/logging setup
-    templates.rs         # minijinja hot-reload helper
+Browser                 Server
+  │                       │
+  │  GET /about           │   full HTML page (server-rendered)
+  │──────────────────────▶│
+  │◀──────────────────────│
+  │                       │
+  │  GET /partials/       │   HTML fragment (HTMX swap)
+  │  status-card          │
+  │──────────────────────▶│
+  │◀──────────────────────│
+  │                       │
+  │  GET /api/health      │   JSON response (REST API)
+  │──────────────────────▶│
+  │◀──────────────────────│
+```
 
-templates/
-  base.html              # Layout: sidebar, header, theme toggle
-  pages/                 # Full page templates
-  partials/              # HTML fragment templates
-  components/            # Design tokens
+Three response modes from the same server:
 
-static/
-  css/app.css            # Minimal CSS framework (~5KB)
-  css/bootstrap-icons.*  # Icon font CSS
-  fonts/                 # Bootstrap Icons webfonts (woff/woff2)
-  js/htmx.min.js         # HTMX library (~14KB gzip)
-  favicon.svg            # Replaceable placeholder
+1. **Pages** — full HTML documents served on navigation (`/`, `/about`, `/demo`).
+2. **Partials** — HTML fragments fetched by HTMX and swapped into the DOM (`/partials/status-card`, `/partials/item-list`, `/partials/greeting`).
+3. **API** — JSON endpoints for programmatic access (`/api/health`).
 
-config/app.toml          # Application config
+Templates hot-reload during development (`cargo run`) and compile into the binary in release builds (`cargo build --release`).
+
+## Project Layout
+
+```
+├── config/
+│   └── app.toml                 # Server, logging & env settings
+├── src/
+│   ├── bin/main.rs              # Entry point: router, middleware, server
+│   ├── lib.rs                   # Crate root, module declarations
+│   ├── config.rs                # TOML config loader (env override support)
+│   ├── error.rs                 # AppError — HTMX-aware error responses
+│   ├── render.rs                # define_page! / define_partial! macros
+│   ├── handlers/
+│   │   ├── templates.rs         # Full-page route handlers
+│   │   ├── partials.rs          # HTMX fragment handlers
+│   │   └── api/health.rs        # JSON REST endpoints
+│   ├── services/
+│   │   ├── mod.rs               # Service container (DI via Arc<dyn Trait>)
+│   │   ├── health.rs            # Health check service
+│   │   └── items.rs             # Item CRUD (in-memory, DB-ready)
+│   ├── middleware/mod.rs        # Security headers, request logging
+│   ├── models/mod.rs            # Shared AppState
+│   └── utils/
+│       ├── logging.rs           # tracing/tracing-subscriber init
+│       └── templates.rs         # MiniJinja hot-reload helper
+├── templates/
+│   ├── base.html                # Root layout (sidebar, header, theme toggle)
+│   ├── pages/                   # Full-page templates
+│   ├── partials/                # Fragment templates
+│   └── components/              # Reusable design tokens
+└── static/
+    ├── css/app.css              # ~5 KB design system
+    ├── css/bootstrap-icons.*    # Icon font styles
+    ├── fonts/                   # Bootstrap Icons woff/woff2
+    └── js/htmx.min.js           # HTMX (~14 KB gzip)
 ```
 
 ## Configuration
 
-Edit `config/app.toml` or use environment variables with `APP__` prefix:
+Default settings live in `config/app.toml`:
+
+```toml
+[server]
+host = "0.0.0.0"
+port = 3001
+
+[logging]
+level = "info"
+```
+
+Override any value with environment variables using the `APP__` prefix and `__` as the nesting separator:
 
 ```bash
 APP__SERVER__PORT=8080 cargo run
 ```
 
-## Adding a New Page
+## Adding a Page
 
-1. Create `templates/pages/mypage.html` extending `base.html`
-2. Add to `src/handlers/templates.rs`:
-   ```rust
-   crate::define_page!(MyPage, "pages/mypage.html", { current_page: &'static str });
-   
-   pub async fn my_page() -> impl IntoResponse {
-       MyPage { current_page: "mypage" }.render_response()
-   }
-   ```
-3. Add route in `src/bin/main.rs`: `.route("/mypage", get(templates::my_page))`
+1. Create a template at `templates/pages/mypage.html` (extend `base.html`).
+2. Define the struct and handler in `src/handlers/templates.rs`:
 
-## Adding a New Partial
+```rust
+crate::define_page!(MyPage, "pages/mypage.html", { current_page: &'static str });
 
-1. Create `templates/partials/my_partial.html`
-2. Add to `src/handlers/partials.rs`:
-   ```rust
-   crate::define_partial!(MyPartial, "partials/my_partial.html", { data: String });
-   
-   pub async fn my_partial() -> impl IntoResponse {
-       MyPartial { data: "hello".into() }.render_response()
-   }
-   ```
-3. Add route: `.route("/partials/my-partial", get(partials::my_partial))`
-4. Use in templates: `hx-get="/partials/my-partial"`
+pub async fn my_page() -> impl IntoResponse {
+    MyPage { current_page: "mypage" }.render_response()
+}
+```
+
+3. Register the route in `src/bin/main.rs`:
+
+```rust
+.route("/mypage", get(templates::my_page))
+```
+
+## Adding a Partial
+
+1. Create a template at `templates/partials/widget.html`.
+2. Define the struct and handler in `src/handlers/partials.rs`:
+
+```rust
+crate::define_partial!(Widget, "partials/widget.html", { label: String });
+
+pub async fn widget() -> impl IntoResponse {
+    Widget { label: "hello".into() }.render_response()
+}
+```
+
+3. Register the route in `src/bin/main.rs`:
+
+```rust
+.route("/partials/widget", get(partials::widget))
+```
+
+4. Trigger from any template:
+
+```html
+<div hx-get="/partials/widget" hx-swap="innerHTML"></div>
+```
+
+## Key Design Decisions
+
+- **`define_page!` / `define_partial!` macros** — a single declaration generates both the Askama compiled template (release) and the MiniJinja hot-reloading template (debug), eliminating boilerplate.
+- **Trait-based service layer** — services are injected as `Arc<dyn Trait>`, making it straightforward to swap in-memory implementations for database-backed ones or test doubles.
+- **HTMX-aware error handling** — `AppError` renders HTML fragments with `HX-Retarget` and `HX-Reswap` headers so errors automatically appear in a toast/notification area.
+- **Security middleware** — every response includes `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, and other hardening headers out of the box.
+- **Minimal JS footprint** — the only JavaScript dependency is HTMX (~14 KB gzipped). No build step, no bundler.
+
+## Optional Features
+
+Enable SQLite support via the `database` feature flag:
+
+```bash
+cargo run --features database
+```
+
+This pulls in [SQLx](https://github.com/launchbadge/sqlx) with the `runtime-tokio` and `sqlite` drivers.
+
+## License
+
+MIT
