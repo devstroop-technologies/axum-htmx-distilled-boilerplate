@@ -34,9 +34,24 @@ impl InMemoryItemService {
     pub fn new() -> Self {
         // Seed with example data
         let items = vec![
-            Item { id: 1, title: "Set up project".into(), description: "Scaffold Axum + HTMX boilerplate".into(), done: true },
-            Item { id: 2, title: "Add database".into(), description: "Integrate SQLite or Postgres".into(), done: false },
-            Item { id: 3, title: "Deploy".into(), description: "Containerize and ship to production".into(), done: false },
+            Item {
+                id: 1,
+                title: "Set up project".into(),
+                description: "Scaffold Axum + HTMX boilerplate".into(),
+                done: true,
+            },
+            Item {
+                id: 2,
+                title: "Add database".into(),
+                description: "Integrate SQLite or Postgres".into(),
+                done: false,
+            },
+            Item {
+                id: 3,
+                title: "Deploy".into(),
+                description: "Containerize and ship to production".into(),
+                done: false,
+            },
         ];
 
         Self {
@@ -58,7 +73,12 @@ impl ItemService for InMemoryItemService {
     }
 
     fn get_by_id(&self, id: u32) -> Option<Item> {
-        self.items.read().unwrap().iter().find(|i| i.id == id).cloned()
+        self.items
+            .read()
+            .unwrap()
+            .iter()
+            .find(|i| i.id == id)
+            .cloned()
     }
 
     fn create(&self, title: String, description: String) -> Item {

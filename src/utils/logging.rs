@@ -8,8 +8,7 @@ pub fn init_logging(log_level: &str) -> Result<(), Box<dyn std::error::Error>> {
         format!("app={},tower_http=debug", log_level)
     };
 
-    let env_filter =
-        EnvFilter::try_new(&filter).unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_new(&filter).unwrap_or_else(|_| EnvFilter::new("info"));
 
     tracing_subscriber::registry()
         .with(env_filter)

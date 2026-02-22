@@ -123,4 +123,3 @@ impl AppError {
         Self::Validation(msg.into())
     }
 }
-

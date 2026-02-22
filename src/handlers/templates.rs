@@ -16,13 +16,22 @@ crate::define_page!(DemoPage, "pages/demo.html", { current_page: &'static str })
 // =============================================================================
 
 pub async fn home_page() -> impl IntoResponse {
-    HomePage { current_page: "home" }.render_response()
+    HomePage {
+        current_page: "home",
+    }
+    .render_response()
 }
 
 pub async fn about_page() -> impl IntoResponse {
-    AboutPage { current_page: "about" }.render_response()
+    AboutPage {
+        current_page: "about",
+    }
+    .render_response()
 }
 
 pub async fn demo_page() -> impl IntoResponse {
-    DemoPage { current_page: "demo" }.render_response()
+    DemoPage {
+        current_page: "demo",
+    }
+    .render_response()
 }

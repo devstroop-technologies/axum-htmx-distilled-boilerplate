@@ -49,9 +49,19 @@ fn format_uptime(seconds: u64) -> String {
     let minutes = (seconds % 3600) / 60;
 
     let mut parts = Vec::new();
-    if days > 0 { parts.push(format!("{}d", days)); }
-    if hours > 0 { parts.push(format!("{}h", hours)); }
-    if minutes > 0 { parts.push(format!("{}m", minutes)); }
+    if days > 0 {
+        parts.push(format!("{}d", days));
+    }
+    if hours > 0 {
+        parts.push(format!("{}h", hours));
+    }
+    if minutes > 0 {
+        parts.push(format!("{}m", minutes));
+    }
 
-    if parts.is_empty() { "< 1m".to_string() } else { parts.join(" ") }
+    if parts.is_empty() {
+        "< 1m".to_string()
+    } else {
+        parts.join(" ")
+    }
 }

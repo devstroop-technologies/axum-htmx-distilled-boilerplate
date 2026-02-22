@@ -30,4 +30,3 @@ pub async fn health_check(State(state): State<Arc<AppState>>) -> Json<HealthResp
         uptime_seconds: health.uptime_seconds,
     })
 }
-
