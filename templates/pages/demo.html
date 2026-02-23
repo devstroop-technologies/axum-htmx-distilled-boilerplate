@@ -5,7 +5,7 @@
 <div class="container-fluid">
     <div class="mb-4">
         <h1 class="text-2xl">HTMX Demo</h1>
-        <p class="text-sm text-muted">Interactive examples of HTMX-powered partials</p>
+        <p class="text-sm text-muted">Interactive examples — all server-rendered, all HTMX-powered</p>
     </div>
 
     <div class="row g-4">
@@ -29,7 +29,7 @@
         <!-- 2. Form submission -->
         <div class="col-md-6">
             <div class="card">
-                <h5><i class="bi bi-input-cursor-text text-success"></i> Form → Partial</h5>
+                <h5><i class="bi bi-input-cursor-text text-success"></i> Form &rarr; Partial</h5>
                 <p class="text-sm text-muted">Type a name and submit — the greeting is an HTMX-fetched fragment.</p>
                 <form hx-get="/partials/greeting" hx-target="#greeting-target" hx-swap="innerHTML" class="mb-3">
                     <div class="input-group input-group-sm">
@@ -59,28 +59,19 @@
             </div>
         </div>
 
-        <!-- 4. Vanilla JS Counter (no framework needed) -->
+        <!-- 4. Security info -->
         <div class="col-md-6">
             <div class="card">
-                <h5><i class="bi bi-lightning-charge-fill text-warning"></i> Vanilla JS Counter</h5>
-                <p class="text-sm text-muted">Client-side reactivity with plain JavaScript — zero dependencies.</p>
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="updateCounter(-1)" style="width:36px;height:36px;">−</button>
-                    <span class="text-2xl" id="counter-value">0</span>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="updateCounter(1)" style="width:36px;height:36px;">+</button>
-                </div>
+                <h5><i class="bi bi-shield-check text-success"></i> Security Active</h5>
+                <p class="text-sm text-muted">Every HTMX request automatically includes the CSRF token. Try inspecting the network tab — each request sends <code>X-CSRF-Token</code>.</p>
+                <ul class="text-sm" style="line-height: 2;">
+                    <li><i class="bi bi-check-circle text-success"></i> CSRF token: rotating per-session</li>
+                    <li><i class="bi bi-check-circle text-success"></i> CSP: strict, SRI-enforced</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Cookies: HttpOnly + SameSite=Strict</li>
+                    <li><i class="bi bi-check-circle text-success"></i> No inline JS — all in auditable files</li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    let count = 0;
-    function updateCounter(delta) {
-        count += delta;
-        document.getElementById('counter-value').textContent = count;
-    }
-</script>
 {% endblock %}

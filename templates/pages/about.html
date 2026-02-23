@@ -3,19 +3,20 @@
 
 {% block content %}
 <div class="container-fluid" style="max-width: 48rem;">
-    <h1 class="text-2xl mb-4">About This Boilerplate</h1>
+    <h1 class="text-2xl mb-4">About This Application</h1>
 
     <div class="card mb-4">
-        <h5>Architecture</h5>
-        <p class="text-sm text-muted">A full-stack Rust web application with SPA-like capabilities, no JavaScript framework required.</p>
+        <h5><i class="bi bi-shield-lock"></i> Security Architecture</h5>
+        <p class="text-sm text-muted">Hardened full-stack Rust web application. No API. No external dependencies. No attack surface.</p>
         <ul class="text-sm" style="line-height: 2;">
-            <li><strong>Backend:</strong> Axum — async Rust web framework built on Tokio</li>
-            <li><strong>Frontend:</strong> Server-rendered HTML templates with HTMX for dynamic updates</li>
-            <li><strong>Templates (Dev):</strong> minijinja — hot-reloads from disk, edit and refresh</li>
-            <li><strong>Templates (Release):</strong> askama — compiled into the binary, zero overhead</li>
-            <li><strong>Styling:</strong> Custom CSS (~5KB) with CSS custom properties design system</li>
-            <li><strong>Reactivity:</strong> Vanilla JS — zero framework dependencies</li>
-            <li><strong>API:</strong> JSON REST endpoints with OpenAPI (Swagger UI)</li>
+            <li><strong>Backend:</strong> Axum — memory-safe Rust, compiled binary</li>
+            <li><strong>Frontend:</strong> Server-rendered HTML + HTMX (single vendored JS file)</li>
+            <li><strong>CSRF:</strong> Per-session tokens on all state-changing requests</li>
+            <li><strong>CSP:</strong> Strict Content-Security-Policy with SRI hashes — no inline JS</li>
+            <li><strong>Sessions:</strong> HttpOnly, SameSite=Strict cookies — not accessible from JS</li>
+            <li><strong>Templates:</strong> Askama (compiled) — no template injection possible</li>
+            <li><strong>Assets:</strong> All vendored locally — zero CDN, zero external requests</li>
+            <li><strong>Headers:</strong> No server fingerprint, no referrer leaks, no DNS prefetch</li>
         </ul>
     </div>
 
@@ -26,7 +27,21 @@
             <li>HTMX attributes like <code>hx-get="/partials/status-card"</code> fire requests that return <strong>HTML fragments</strong></li>
             <li>HTMX swaps the fragment into the page — no full reload, feels like a SPA</li>
             <li>Polling (<code>hx-trigger="every 10s"</code>) keeps data live without WebSockets</li>
+            <li>CSRF tokens rotate automatically — HTMX sends them on every request</li>
         </ol>
+    </div>
+
+    <div class="card mb-4">
+        <h5>Threat Model</h5>
+        <ul class="text-sm" style="line-height: 2;">
+            <li><strong>XSS:</strong> Blocked — strict CSP, no inline scripts, SRI on all JS</li>
+            <li><strong>CSRF:</strong> Blocked — per-session HMAC tokens, SameSite cookies</li>
+            <li><strong>Clickjacking:</strong> Blocked — X-Frame-Options: DENY, frame-ancestors 'none'</li>
+            <li><strong>Supply chain:</strong> Eliminated — zero npm, zero CDN, all assets vendored</li>
+            <li><strong>API abuse:</strong> Eliminated — no JSON API exists</li>
+            <li><strong>Template injection:</strong> Impossible — askama compiles templates at build time</li>
+            <li><strong>Fingerprinting:</strong> Minimized — no server header, no referrer, no DNS prefetch</li>
+        </ul>
     </div>
 
     <div class="card">
@@ -36,28 +51,23 @@ src/
   bin/main.rs          ← Entry point, router, middleware
   lib.rs               ← Library root with macro exports
   config.rs            ← TOML config loader
-  error.rs             ← Typed errors with HTMX-aware responses
+  error.rs             ← HTMX-aware error responses
   render.rs            ← define_page! / define_partial! macros
   handlers/
-    templates.rs       ← Full-page handlers (3 lines each!)
+    templates.rs       ← Full-page handlers (with CSRF)
     partials.rs        ← HTMX partial handlers
-    api/health.rs      ← JSON REST API handlers
   services/
     mod.rs             ← Service container
+    csrf.rs            ← CSRF token generation + validation
+    session.rs         ← Server-side session management
     health.rs          ← Health service (trait + impl)
     items.rs           ← Item service (in-memory, DB-ready)
-  middleware/mod.rs    ← Security headers, request logging
-  models/mod.rs        ← Shared state with services
-  utils/
-    logging.rs         ← Tracing setup
-    templates.rs       ← minijinja hot-reload helper
-templates/
-  base.html            ← Layout with sidebar, theme toggle
-  pages/*.html         ← Full page templates
-  partials/*.html      ← HTML fragment templates
-  components/*.html    ← Design tokens
-static/css/app.css     ← Minimal CSS framework (~5KB)
-config/app.toml        ← Application configuration</pre>
+  middleware/mod.rs    ← Security headers, CSRF, sessions
+  models/mod.rs        ← Shared state
+static/
+  js/htmx.min.js      ← Vendored HTMX (SRI-pinned)
+  js/app.js            ← Minimal UI (~30 lines, auditable)
+  css/                 ← Vendored CSS + fonts (no CDN)</pre>
     </div>
 </div>
 {% endblock %}
