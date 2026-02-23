@@ -34,6 +34,10 @@ RUN cargo build --release --bin app
 # Distroless-style minimal image — no shell, no package manager, no attack surface
 FROM debian:bookworm-slim AS runtime
 
+# Install minimal runtime deps (curl for health check)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 # Security: run as non-root
 RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
 
@@ -53,9 +57,9 @@ USER app
 # Expose the configured port
 EXPOSE 8000
 
-# Health check (uses only the binary — no curl/wget needed)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD ["/app/app", "--health-check"] || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -sf http://localhost:8000/healthz || exit 1
 
 # Run the binary directly — no shell wrapper
 ENTRYPOINT ["/app/app"]

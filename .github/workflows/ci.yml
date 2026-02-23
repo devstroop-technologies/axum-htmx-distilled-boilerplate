@@ -67,22 +67,30 @@ jobs:
             -p 8000:8000 \
             -e APP__SERVER__HOST=0.0.0.0 \
             -e APP__SERVER__PORT=8000 \
-            -e APP__DATABASE__URL=sqlite:///app/data/app.db?mode=rwc \
+            -e "APP__DATABASE__URL=sqlite:///app/data/app.db?mode=rwc" \
             ${{ env.IMAGE_NAME }}:test
+
+      - name: Container status
+        run: docker ps -a --filter name=test-app
 
       - name: Wait for healthy startup
         run: |
           echo "Waiting for app to start..."
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:8000/ > /dev/null 2>&1; then
+            if curl -sf http://localhost:8000/healthz > /dev/null 2>&1; then
               echo "App is up after ${i}s"
               exit 0
             fi
             sleep 1
           done
           echo "App failed to start within 30s"
-          docker logs test-app
+          docker logs test-app 2>&1
           exit 1
+
+      - name: Verify health endpoint
+        run: |
+          curl -sf http://localhost:8000/healthz
+          echo " → /healthz OK"
 
       - name: Verify pages return 200
         run: |

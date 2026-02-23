@@ -50,12 +50,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/partials/item-list", get(partials::item_list))
         .route("/partials/greeting", get(partials::greeting));
 
+    // Health check (no middleware — used by Docker HEALTHCHECK)
+    let health_route = Router::new().route("/healthz", get(app::handlers::healthz));
+
     // Page routes (full HTML)
     let app = Router::new()
         .route("/", get(templates::home_page))
         .route("/about", get(templates::about_page))
         .route("/demo", get(templates::demo_page))
         .merge(partial_routes)
+        .merge(health_route)
         // Static files (vendored CSS, JS, fonts — no external CDN)
         .nest_service("/static", ServeDir::new("static"))
         // Inject shared state into extensions for middleware access
