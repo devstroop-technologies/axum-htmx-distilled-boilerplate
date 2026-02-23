@@ -1,5 +1,6 @@
-use minijinja::Environment;
 use serde::Serialize;
+#[cfg(debug_assertions)]
+use minijinja::Environment;
 
 /// Render a template from disk (debug mode hot-reload).
 /// In release mode, askama compiled templates are used instead.
