@@ -6,6 +6,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub logging: LoggingConfig,
     pub environment: EnvironmentConfig,
+    pub database: DatabaseConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -25,6 +26,11 @@ pub struct EnvironmentConfig {
     pub log_level: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DatabaseConfig {
+    pub url: String,
+}
+
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
@@ -38,6 +44,9 @@ impl Default for AppConfig {
             environment: EnvironmentConfig {
                 environment: "development".to_string(),
                 log_level: "info".to_string(),
+            },
+            database: DatabaseConfig {
+                url: "sqlite://data.db?mode=rwc".to_string(),
             },
         }
     }

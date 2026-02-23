@@ -114,24 +114,117 @@ impl ItemService for InMemoryItemService {
 }
 
 // ============================================================================
-// SQLx Implementation (optional — when "database" feature is enabled)
+// SQLx Implementation — SQLite-backed item storage
 // ============================================================================
 
-#[cfg(feature = "database")]
-pub mod db {
-    use super::*;
-    use sqlx::{Pool, Sqlite};
+use sqlx::sqlite::SqlitePool;
 
-    pub struct SqliteItemService {
-        pool: Pool<Sqlite>,
+pub struct SqliteItemService {
+    pool: SqlitePool,
+}
+
+impl SqliteItemService {
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
     }
+}
 
-    impl SqliteItemService {
-        pub fn new(pool: Pool<Sqlite>) -> Self {
-            Self { pool }
+/// Row type returned by SQLx queries (SQLite stores booleans as integers)
+#[derive(sqlx::FromRow)]
+struct ItemRow {
+    id: i64,
+    title: String,
+    description: String,
+    done: i32,
+}
+
+impl From<ItemRow> for Item {
+    fn from(row: ItemRow) -> Self {
+        Item {
+            id: row.id as u32,
+            title: row.title,
+            description: row.description,
+            done: row.done != 0,
         }
     }
+}
 
-    // TODO: Implement ItemService for SqliteItemService
-    // This is a placeholder showing where database integration would go
+impl ItemService for SqliteItemService {
+    fn list_all(&self) -> Vec<Item> {
+        // Block on async query from sync trait — runs on the tokio runtime
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items ORDER BY id")
+                    .fetch_all(&self.pool)
+                    .await
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(Item::from)
+                    .collect()
+            })
+        })
+    }
+
+    fn get_by_id(&self, id: u32) -> Option<Item> {
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items WHERE id = ?")
+                    .bind(id as i64)
+                    .fetch_optional(&self.pool)
+                    .await
+                    .ok()
+                    .flatten()
+                    .map(Item::from)
+            })
+        })
+    }
+
+    fn create(&self, title: String, description: String) -> Item {
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                let row = sqlx::query_as::<_, ItemRow>(
+                    "INSERT INTO items (title, description) VALUES (?, ?) RETURNING id, title, description, done"
+                )
+                    .bind(&title)
+                    .bind(&description)
+                    .fetch_one(&self.pool)
+                    .await
+                    .expect("Failed to insert item");
+                Item::from(row)
+            })
+        })
+    }
+
+    fn toggle_done(&self, id: u32) -> Option<Item> {
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                // Toggle done: flip 0↔1
+                sqlx::query("UPDATE items SET done = CASE WHEN done = 0 THEN 1 ELSE 0 END WHERE id = ?")
+                    .bind(id as i64)
+                    .execute(&self.pool)
+                    .await
+                    .ok()?;
+
+                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items WHERE id = ?")
+                    .bind(id as i64)
+                    .fetch_optional(&self.pool)
+                    .await
+                    .ok()
+                    .flatten()
+                    .map(Item::from)
+            })
+        })
+    }
+
+    fn delete(&self, id: u32) -> bool {
+        tokio::task::block_in_place(|| {
+            tokio::runtime::Handle::current().block_on(async {
+                let result = sqlx::query("DELETE FROM items WHERE id = ?")
+                    .bind(id as i64)
+                    .execute(&self.pool)
+                    .await;
+                matches!(result, Ok(r) if r.rows_affected() > 0)
+            })
+        })
+    }
 }

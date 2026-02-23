@@ -16,6 +16,7 @@
 //! 4. Both page templates and partials share the same design system
 
 pub mod config;
+pub mod db;
 pub mod error;
 pub mod handlers;
 pub mod middleware;

@@ -8,6 +8,7 @@ use tracing::info;
 
 use app::{
     config::AppConfig,
+    db,
     handlers::{partials, templates},
     middleware as mw,
     models::AppState,
@@ -28,11 +29,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting axum-htmx-app v{}", env!("CARGO_PKG_VERSION"));
 
+    // Initialize database pool and run migrations
+    let db = db::init_pool(&config.database.url)
+        .await
+        .expect("Failed to initialize database");
+
     // Initialize services (includes CSRF secret + session store)
-    let services = Services::new_default(SystemTime::now());
+    let services = Services::new_with_db(SystemTime::now(), db.clone());
 
     // Shared state with services
-    let state = Arc::new(AppState::new(services));
+    let state = Arc::new(AppState::new(services, db));
 
     // ── Routes ──────────────────────────────────────────────────────────
     // No JSON API. No Swagger. No CORS.

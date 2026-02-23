@@ -8,3 +8,6 @@ level = "info"
 [environment]
 environment = "development"
 log_level = "info"
+
+[database]
+url = "sqlite://data.db?mode=rwc"
