@@ -12,6 +12,10 @@ services:
       - APP__SERVER__PORT=8000
       - APP__LOGGING__LEVEL=info
       - APP__ENVIRONMENT__ENVIRONMENT=production
+      - APP__DATABASE__URL=sqlite:///app/data/app.db?mode=rwc
+    # ── Volumes ─────────────────────────────────────────────────────────
+    volumes:
+      - app-data:/app/data
     # ── Security hardening ──────────────────────────────────────────────
     security_opt:
       - no-new-privileges:true
@@ -38,3 +42,6 @@ services:
 networks:
   frontend:
     driver: bridge
+
+volumes:
+  app-data:
