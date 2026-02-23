@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <title>{% block title %}Axum HTMX App{% endblock %}</title>
 
     <!-- Design System Tokens -->
     {% include "components/_tokens.html" %}
 
-    <!-- Minimal CSS (~5KB vs Bootstrap's 25KB) -->
+    <!-- Vendored CSS — no external CDN, no remote fonts -->
     <link href="/static/css/app.css" rel="stylesheet">
-    <!-- Icons (optional, tree-shakeable in prod) -->
+    <!-- Vendored icons — served from local fonts/ directory -->
     <link href="/static/css/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
@@ -79,6 +80,10 @@
         #error-toast:empty { display: none; }
         #error-toast { position: fixed; top: var(--space-4); right: var(--space-4); z-index: 1000; max-width: 400px; }
 
+        /* Theme icons — only show the active one */
+        [data-theme="light"] .theme-icon-dark { display: none; }
+        [data-theme="dark"] .theme-icon-light { display: none; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar { display: none; }
@@ -86,12 +91,22 @@
         }
     </style>
 
-    <!-- HTMX only (~14KB gzipped, zero framework overhead) -->
-    <script src="/static/js/htmx.min.js"></script>
+    <!--
+        HTMX — the ONLY JavaScript loaded. Vendored, SRI-pinned.
+        If the hash doesn't match, the browser refuses to execute it.
+    -->
+    <script src="/static/js/htmx.min.js"
+            integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+            crossorigin="anonymous"></script>
 
     {% block head %}{% endblock %}
 </head>
-<body>
+<!--
+    HTMX: automatically send CSRF token on every request.
+    The token is injected by the session middleware as a response header.
+    HTMX reads it from the meta tag and attaches it to all requests.
+-->
+<body hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'>
     <!-- Error toast container (HTMX errors swap here) -->
     <div id="error-toast"></div>
 
@@ -100,8 +115,8 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a href="/" class="sidebar-brand">
-                    <i class="bi bi-box-fill"></i>
-                    <span class="brand-text">HTMX App</span>
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span class="brand-text">Hardened App</span>
                 </a>
             </div>
             <nav class="sidebar-nav">
@@ -114,9 +129,6 @@
                 <a href="/about" class="nav-link {% if current_page == 'about' %}active{% endif %}">
                     <i class="bi bi-info-circle"></i><span class="nav-text">About</span>
                 </a>
-                <a href="/api-docs/" target="_blank" class="nav-link">
-                    <i class="bi bi-book"></i><span class="nav-text">API Docs</span>
-                </a>
             </nav>
         </aside>
 
@@ -124,23 +136,15 @@
         <div class="main-wrapper">
             <header class="main-header">
                 <div style="display:flex;align-items:center;gap:var(--space-2)">
-                    <button class="btn btn-light btn-sm" onclick="toggleSidebar()" style="width:36px;height:36px;">
+                    <button class="btn btn-light btn-sm" id="sidebar-toggle" style="width:36px;height:36px;">
                         <i class="bi bi-list"></i>
                     </button>
                 </div>
                 <div>
-                    <button class="btn btn-light btn-sm" onclick="toggleTheme()" title="Toggle theme" style="width:36px;height:36px;">
-                        <i class="bi bi-sun-fill" id="theme-icon-light"></i>
-                        <i class="bi bi-moon-fill" id="theme-icon-dark"></i>
+                    <button class="btn btn-light btn-sm" id="theme-toggle" title="Toggle theme" style="width:36px;height:36px;">
+                        <i class="bi bi-sun-fill theme-icon-light"></i>
+                        <i class="bi bi-moon-fill theme-icon-dark"></i>
                     </button>
-                    <script>
-                        // Immediately set correct icon (prevents flash of both icons)
-                        (function(){
-                            var t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
-                            document.getElementById('theme-icon-light').style.display = t === 'light' ? 'inline-block' : 'none';
-                            document.getElementById('theme-icon-dark').style.display = t === 'dark' ? 'inline-block' : 'none';
-                        })();
-                    </script>
                 </div>
             </header>
             <main class="main-content">
@@ -149,41 +153,11 @@
         </div>
     </div>
 
-    <script>
-        // Sidebar toggle (replaces Alpine.js state management)
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        // Theme toggle (vanilla JS, no framework needed)
-        function toggleTheme() {
-            const html = document.documentElement;
-            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            localStorage.setItem('theme', next);
-            updateThemeIcons(next);
-        }
-
-        function updateThemeIcons(theme) {
-            document.getElementById('theme-icon-light').style.display = theme === 'light' ? 'inline-block' : 'none';
-            document.getElementById('theme-icon-dark').style.display = theme === 'dark' ? 'inline-block' : 'none';
-        }
-
-        // Initialize theme on load
-        (function() {
-            const saved = localStorage.getItem('theme') ||
-                (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', saved);
-            updateThemeIcons(saved);
-
-            // Auto-dismiss error toasts after 5s
-            document.body.addEventListener('htmx:afterSwap', function(e) {
-                if (e.detail.target.id === 'error-toast') {
-                    setTimeout(() => e.detail.target.innerHTML = '', 5000);
-                }
-            });
-        })();
-    </script>
     {% block scripts %}{% endblock %}
+
+    <!-- Minimal UI interactions — sidebar, theme, CSRF refresh. Fully auditable. -->
+    <script src="/static/js/app.js"
+            integrity="sha384-PMounJsLzecWPmGgUp+rmq81ao6CaK1vp02qhyBK66VebP1pIGgbYS+m14+AsFN5"
+            crossorigin="anonymous"></script>
 </body>
 </html>
