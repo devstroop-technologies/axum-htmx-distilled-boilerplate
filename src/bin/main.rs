@@ -3,18 +3,12 @@ use std::time::SystemTime;
 
 use axum::{middleware, routing::get, Router};
 use tower::ServiceBuilder;
-use tower_http::{
-    cors::{Any, CorsLayer},
-    services::ServeDir,
-    trace::TraceLayer,
-};
+use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing::info;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::SwaggerUi;
 
 use app::{
     config::AppConfig,
-    handlers::{api::health, partials, templates},
+    handlers::{partials, templates},
     middleware as mw,
     models::AppState,
     services::Services,
@@ -34,60 +28,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting axum-htmx-app v{}", env!("CARGO_PKG_VERSION"));
 
-    // Initialize services
+    // Initialize services (includes CSRF secret + session store)
     let services = Services::new_default(SystemTime::now());
 
     // Shared state with services
     let state = Arc::new(AppState::new(services));
 
-    // CORS
-    let cors = CorsLayer::new()
-        .allow_methods(Any)
-        .allow_headers(Any)
-        .allow_origin(Any);
-
-    // OpenAPI
-    #[derive(OpenApi)]
-    #[openapi(
-        paths(health::health_check),
-        components(schemas(health::HealthResponse)),
-        tags((name = "Health", description = "Health check endpoints")),
-        info(title = "Axum HTMX App", version = "0.1.0")
-    )]
-    struct ApiDoc;
-
     // ── Routes ──────────────────────────────────────────────────────────
-
-    // API routes (JSON)
-    let api_routes = Router::new()
-        .route("/health", get(health::health_check))
-        .with_state(state.clone());
+    // No JSON API. No Swagger. No CORS.
+    // Every route returns HTML — full pages or HTMX partials.
 
     // HTMX partial routes (HTML fragments)
     let partial_routes = Router::new()
         .route("/partials/status-card", get(partials::status_card))
         .route("/partials/item-list", get(partials::item_list))
-        .route("/partials/greeting", get(partials::greeting))
-        .with_state(state.clone());
+        .route("/partials/greeting", get(partials::greeting));
 
     // Page routes (full HTML)
     let app = Router::new()
         .route("/", get(templates::home_page))
         .route("/about", get(templates::about_page))
         .route("/demo", get(templates::demo_page))
-        .nest("/api", api_routes)
         .merge(partial_routes)
-        // Static files
+        // Static files (vendored CSS, JS, fonts — no external CDN)
         .nest_service("/static", ServeDir::new("static"))
-        // Swagger UI
-        .merge(SwaggerUi::new("/api-docs").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        // Middleware (applied bottom-up)
+        // Inject shared state into extensions for middleware access
+        .layer(axum::Extension(state.clone()))
+        .with_state(state.clone())
+        // ── Middleware (applied bottom-up) ───────────────────────────────
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())
                 .layer(middleware::from_fn(mw::request_logger))
                 .layer(middleware::from_fn(mw::security_headers))
-                .layer(cors),
+                .layer(middleware::from_fn(mw::session_middleware))
+                .layer(middleware::from_fn(mw::csrf_protection)),
         );
 
     // ── Start ───────────────────────────────────────────────────────────
@@ -96,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
     info!("Listening on http://{}", addr);
-    info!("Swagger UI at http://{}/api-docs/", addr);
+    info!("Security: CSP + CSRF + HttpOnly sessions + SRI + no external deps");
 
     axum::serve(listener, app)
         .with_graceful_shutdown(async {
