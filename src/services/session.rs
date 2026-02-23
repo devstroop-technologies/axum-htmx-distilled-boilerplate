@@ -6,8 +6,8 @@
 //! - In-memory session store (swap for Redis/DB in production)
 //! - Automatic cleanup of expired sessions
 
-use rand::RngCore;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use rand::RngCore;
 use std::collections::HashMap;
 use std::sync::RwLock;
 use std::time::{Duration, Instant};
@@ -107,6 +107,9 @@ impl SessionStore for InMemorySessionStore {
     }
 
     fn cleanup_expired(&self) {
-        self.sessions.write().unwrap().retain(|_, s| !s.is_expired());
+        self.sessions
+            .write()
+            .unwrap()
+            .retain(|_, s| !s.is_expired());
     }
 }

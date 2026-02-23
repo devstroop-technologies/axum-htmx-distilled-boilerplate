@@ -20,10 +20,12 @@ use std::sync::Arc;
 
 /// SRI hash for the vendored htmx.min.js — update if the file changes.
 /// Generate with: openssl dgst -sha384 -binary static/js/htmx.min.js | openssl base64 -A
-const HTMX_SRI_HASH: &str = "sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+";
+const HTMX_SRI_HASH: &str =
+    "sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+";
 
 /// SRI hash for app.js — update if the file changes.
-const APP_SRI_HASH: &str = "sha384-PMounJsLzecWPmGgUp+rmq81ao6CaK1vp02qhyBK66VebP1pIGgbYS+m14+AsFN5";
+const APP_SRI_HASH: &str =
+    "sha384-PMounJsLzecWPmGgUp+rmq81ao6CaK1vp02qhyBK66VebP1pIGgbYS+m14+AsFN5";
 
 // ─── Security Headers ───────────────────────────────────────────────────────
 
@@ -85,7 +87,9 @@ pub async fn security_headers(request: Request, next: Next) -> Response {
     // Disable browser features that leak info
     h.insert(
         header::HeaderName::from_static("permissions-policy"),
-        header::HeaderValue::from_static("camera=(), microphone=(), geolocation=(), interest-cohort=()"),
+        header::HeaderValue::from_static(
+            "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+        ),
     );
 
     // Strip server identification
@@ -93,7 +97,10 @@ pub async fn security_headers(request: Request, next: Next) -> Response {
     h.insert(header::SERVER, header::HeaderValue::from_static(""));
 
     // Prevent caching of sensitive pages
-    h.insert(header::CACHE_CONTROL, header::HeaderValue::from_static("no-store, no-cache, must-revalidate"));
+    h.insert(
+        header::CACHE_CONTROL,
+        header::HeaderValue::from_static("no-store, no-cache, must-revalidate"),
+    );
     h.insert(header::PRAGMA, header::HeaderValue::from_static("no-cache"));
 
     // Cross-Origin policies
@@ -213,20 +220,21 @@ pub async fn session_middleware(request: Request, next: Next) -> Response {
 
     // Generate CSRF token for this session
     let csrf_token = state.services.csrf.generate_token(&session.id);
-    state.services.sessions.update_csrf(&session.id, &csrf_token);
+    state
+        .services
+        .sessions
+        .update_csrf(&session.id, &csrf_token);
 
     let mut response = next.run(request).await;
 
     // Set session cookie (always — refreshes expiry)
     let cookie_value = format!(
         "{}={}; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600",
-        SESSION_COOKIE,
-        session.id
+        SESSION_COOKIE, session.id
     );
-    response.headers_mut().append(
-        header::SET_COOKIE,
-        cookie_value.parse().unwrap(),
-    );
+    response
+        .headers_mut()
+        .append(header::SET_COOKIE, cookie_value.parse().unwrap());
 
     // Inject CSRF token as a response header for HTMX to read
     response.headers_mut().insert(

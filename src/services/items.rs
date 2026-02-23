@@ -154,13 +154,15 @@ impl ItemService for SqliteItemService {
         // Block on async query from sync trait — runs on the tokio runtime
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
-                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items ORDER BY id")
-                    .fetch_all(&self.pool)
-                    .await
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(Item::from)
-                    .collect()
+                sqlx::query_as::<_, ItemRow>(
+                    "SELECT id, title, description, done FROM items ORDER BY id",
+                )
+                .fetch_all(&self.pool)
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .map(Item::from)
+                .collect()
             })
         })
     }
@@ -168,13 +170,15 @@ impl ItemService for SqliteItemService {
     fn get_by_id(&self, id: u32) -> Option<Item> {
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
-                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items WHERE id = ?")
-                    .bind(id as i64)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .ok()
-                    .flatten()
-                    .map(Item::from)
+                sqlx::query_as::<_, ItemRow>(
+                    "SELECT id, title, description, done FROM items WHERE id = ?",
+                )
+                .bind(id as i64)
+                .fetch_optional(&self.pool)
+                .await
+                .ok()
+                .flatten()
+                .map(Item::from)
             })
         })
     }
@@ -199,19 +203,23 @@ impl ItemService for SqliteItemService {
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
                 // Toggle done: flip 0↔1
-                sqlx::query("UPDATE items SET done = CASE WHEN done = 0 THEN 1 ELSE 0 END WHERE id = ?")
-                    .bind(id as i64)
-                    .execute(&self.pool)
-                    .await
-                    .ok()?;
+                sqlx::query(
+                    "UPDATE items SET done = CASE WHEN done = 0 THEN 1 ELSE 0 END WHERE id = ?",
+                )
+                .bind(id as i64)
+                .execute(&self.pool)
+                .await
+                .ok()?;
 
-                sqlx::query_as::<_, ItemRow>("SELECT id, title, description, done FROM items WHERE id = ?")
-                    .bind(id as i64)
-                    .fetch_optional(&self.pool)
-                    .await
-                    .ok()
-                    .flatten()
-                    .map(Item::from)
+                sqlx::query_as::<_, ItemRow>(
+                    "SELECT id, title, description, done FROM items WHERE id = ?",
+                )
+                .bind(id as i64)
+                .fetch_optional(&self.pool)
+                .await
+                .ok()
+                .flatten()
+                .map(Item::from)
             })
         })
     }

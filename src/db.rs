@@ -23,9 +23,7 @@ pub async fn init_pool(database_url: &str) -> Result<Db, sqlx::Error> {
         .await?;
 
     // Run embedded migrations at startup
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
 
     info!("Database migrations applied successfully");
 

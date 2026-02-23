@@ -4,11 +4,7 @@
 //! - Debug: minijinja hot-reloads templates from disk  
 //! - Release: askama compiles templates into the binary
 
-use axum::{
-    extract::State,
-    http::header,
-    response::IntoResponse,
-};
+use axum::{extract::State, http::header, response::IntoResponse};
 use std::sync::Arc;
 
 use crate::models::AppState;
