@@ -39,7 +39,7 @@ pub async fn security_headers(request: Request, next: Next) -> Response {
         format!(
             "default-src 'self'; \
              script-src 'self' '{HTMX_SRI_HASH}' '{APP_SRI_HASH}'; \
-             style-src 'self'; \
+             style-src 'self' 'unsafe-inline'; \
              img-src 'self' data:; \
              font-src 'self'; \
              connect-src 'self'; \

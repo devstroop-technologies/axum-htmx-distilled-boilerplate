@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: axum-htmx-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      - APP__SERVER__HOST=0.0.0.0
+      - APP__SERVER__PORT=8000
+      - APP__LOGGING__LEVEL=info
+      - APP__ENVIRONMENT__ENVIRONMENT=production
+    # ── Security hardening ──────────────────────────────────────────────
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=10m
+    cap_drop:
+      - ALL
+    # No capabilities needed — pure HTTP server
+    # cap_add: []
+    # ── Resource limits ─────────────────────────────────────────────────
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 32M
+    # ── Network isolation ───────────────────────────────────────────────
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    driver: bridge

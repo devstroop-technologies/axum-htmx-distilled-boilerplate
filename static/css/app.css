@@ -224,3 +224,14 @@ th { font-weight: 600; background: var(--color-background-muted); }
    Icons (Bootstrap Icons utility classes)
    ============================================================ */
 .bi { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; }
+
+/* ============================================================
+   Utility Classes (replace inline styles in templates)
+   ============================================================ */
+.inline-flex-center { display: flex; align-items: center; gap: var(--space-2); }
+.btn-icon { width: 36px; height: 36px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); display: inline-block; }
+.skeleton-block { height: 60px; border-radius: var(--radius-md); }
+.pre-block { background: var(--color-background-muted); padding: var(--space-4); border-radius: var(--radius-md); overflow-x: auto; }
+.container-narrow { max-width: 48rem; }
+.line-height-relaxed { line-height: 2; }
